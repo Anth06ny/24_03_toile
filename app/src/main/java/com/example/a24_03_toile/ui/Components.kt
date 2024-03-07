@@ -48,6 +48,7 @@ fun MyError(
             modifier = modifier
                 .background(MaterialTheme.colorScheme.error)
                 .padding(8.dp)
+
         ) {
 
             Text(

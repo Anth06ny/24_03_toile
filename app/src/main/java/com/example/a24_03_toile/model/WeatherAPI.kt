@@ -49,7 +49,7 @@ object WeatherAPI {
     fun loadWeather(cityName: String): WeatherBean {
         //Eventuel contrôle
         //Réaliser la requête.
-        val json: String = sendGet("/weather$cityName")
+        val json: String = sendGet("/weather?q=$cityName")
 
         //Parser le JSON avec le bon bean et GSON
         val data: WeatherBean = gson.fromJson(json, WeatherBean::class.java)
