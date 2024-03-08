@@ -18,12 +18,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -48,6 +52,7 @@ import com.bumptech.glide.integration.compose.placeholder
 import com.example.a24_03_toile.R
 import com.example.a24_03_toile.model.PictureBean
 import com.example.a24_03_toile.ui.MyError
+import com.example.a24_03_toile.ui.MyTopBar
 import com.example.a24_03_toile.ui.Routes
 import com.example.a24_03_toile.ui.theme._24_03_toileTheme
 import com.example.a24_03_toile.viewmodel.FakeViewModel
@@ -72,7 +77,35 @@ fun SearchScreenPreview() {
 @Composable
 fun SearchScreen(navHostController : NavHostController? = null, mainViewModel : MainViewModel = viewModel()) {
 
+    var showFavorite by remember { mutableStateOf(false) }
+
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+        MyTopBar(
+            title = "Météo",
+            navController = navHostController,
+            //Icônes sur la barre
+            topBarActions = listOf {
+                IconButton(onClick = {
+                    showFavorite = !showFavorite
+                }) {
+                    Icon(
+                        if (showFavorite) Icons.Filled.Favorite else Icons.Default.FavoriteBorder, contentDescription = "Coeur"
+                    )
+                }
+                IconButton(onClick = {
+                }) {
+                    Icon(
+                        Icons.Filled.LocationOn, contentDescription = "Coeur"
+                    )
+                }
+            },
+            dropDownMenuItem  = listOf(
+                Triple(Icons.Filled.Clear, "Clear") { mainViewModel.uploadSearchText("") }
+            )
+
+        )
+
         SearchBar(value = mainViewModel.searchText) {
             mainViewModel.uploadSearchText(it)
         }
@@ -88,10 +121,11 @@ fun SearchScreen(navHostController : NavHostController? = null, mainViewModel : 
         //Permet de remplacer très facilement le RecyclerView. LazyRow existe aussi
         LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             //val filterList = mainViewModel.myList.filter { it.title.contains(mainViewModel.searchText) }
-            //val filterList = mainViewModel.filterList()
-            items(mainViewModel.myList.size) {
-                PictureRowItem(data =mainViewModel.myList[it] , onPictureClick = {
-                    navHostController?.navigate(Routes.DetailScreen.withObject(mainViewModel.myList[it]))
+            val filterList = mainViewModel.myList.filter { !showFavorite || it.favorite }
+
+            items(filterList.size) {
+                PictureRowItem(data =filterList[it] , onPictureClick = {
+                    navHostController?.navigate(Routes.DetailScreen.withObject(filterList[it]))
                 })
             }
         }

@@ -11,7 +11,6 @@ import com.example.a24_03_toile.model.WeatherAPI
 import com.example.a24_03_toile.model.pictureList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 open class MainViewModel : ViewModel() {
@@ -27,10 +26,20 @@ open class MainViewModel : ViewModel() {
 
     fun filterList() = myList.filter { it.title.contains(searchText) }
 
+    //Dans le ViewModel
+    fun togglePictureAt(id : Int){
+        //Récupère la position de l'élément concerné
+        val position = myList.indexOfFirst { it.id == id }
+        // Copy créera une nouvelle référence, ce qui fera évoluer la liste et donc déclenchera la recomposition
+        //myList[position] = myList[position].copy(favorite = !myList[position].favorite)
+
+        myList[position] =myList[position].let { it.copy(favorite = !it.favorite) }
+    }
+
 
     fun uploadSearchText(newText: String) {
         searchText = newText
-        if (searchText.length > 2) {
+        /*if (searchText.length > 2) {
             runInProgress = true
             job.cancel()
             job = Job()
@@ -38,7 +47,7 @@ open class MainViewModel : ViewModel() {
                     delay(2000)
                     loadData(true)
             }
-        }
+        }*/
     }
 
     open fun loadData(force: Boolean = false) {//Simulation de chargement de donnée
