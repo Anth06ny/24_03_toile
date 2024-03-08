@@ -41,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -57,6 +58,9 @@ import com.example.a24_03_toile.ui.Routes
 import com.example.a24_03_toile.ui.theme._24_03_toileTheme
 import com.example.a24_03_toile.viewmodel.FakeViewModel
 import com.example.a24_03_toile.viewmodel.MainViewModel
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 
 @Preview(showBackground = true, showSystemUi = true)
 @Preview(showBackground = true, showSystemUi = true, uiMode = UI_MODE_NIGHT_YES)
@@ -74,16 +78,21 @@ fun SearchScreenPreview() {
     }
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun SearchScreen(navHostController : NavHostController? = null, mainViewModel : MainViewModel = viewModel()) {
 
     var showFavorite by remember { mutableStateOf(false) }
+    //Accès à une permission
+    val locationPermissionState = rememberPermissionState(android.Manifest.permission.ACCESS_FINE_LOCATION)
+
+    val context = LocalContext.current
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
         MyTopBar(
             title = "Météo",
-            navController = navHostController,
+            navHostController = navHostController,
             //Icônes sur la barre
             topBarActions = listOf {
                 IconButton(onClick = {
@@ -94,6 +103,14 @@ fun SearchScreen(navHostController : NavHostController? = null, mainViewModel : 
                     )
                 }
                 IconButton(onClick = {
+                    //Si on a pas la permission on la demande
+                    if (!locationPermissionState.status.isGranted) {
+                        //Affiche la popup de demande de permission
+                        locationPermissionState.launchPermissionRequest()
+                    }
+                    else {
+                        mainViewModel.loadWeatherAround(context)
+                    }
                 }) {
                     Icon(
                         Icons.Filled.LocationOn, contentDescription = "Coeur"
@@ -103,7 +120,6 @@ fun SearchScreen(navHostController : NavHostController? = null, mainViewModel : 
             dropDownMenuItem  = listOf(
                 Triple(Icons.Filled.Clear, "Clear") { mainViewModel.uploadSearchText("") }
             )
-
         )
 
         SearchBar(value = mainViewModel.searchText) {

@@ -105,7 +105,7 @@ fun MyTopBarPreview() {
 @Composable
 fun MyTopBar(
     title:String? = null,
-    navController: NavHostController? = null,
+    navHostController: NavHostController? = null,
     //Icône
     topBarActions: List<@Composable () -> Unit>? = null,
     //Icône, Texte, Action
@@ -123,8 +123,8 @@ fun MyTopBar(
 
         //Icône retour
         navigationIcon = {
-            if (navController?.previousBackStackEntry != null) {
-                IconButton(onClick = { navController.popBackStack() }) {
+            if (navHostController?.previousBackStackEntry != null) {
+                IconButton(onClick = { navHostController.popBackStack() }) {
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
                         contentDescription = "Back"

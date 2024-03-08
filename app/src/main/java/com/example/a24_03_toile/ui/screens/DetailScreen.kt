@@ -42,8 +42,6 @@ import com.example.a24_03_toile.viewmodel.MainViewModel
 fun DetailScreenPreview() {
     _24_03_toileTheme {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-
-
             DetailScreen(1)
         }
     }
@@ -61,7 +59,7 @@ fun DetailScreen(idPicture: Int, navController: NavHostController? = null, mainV
     ) {
         MyTopBar(
             title = pictureBean?.title ?: "-",
-            navController = navController,
+            navHostController = navController,
             //Icônes sur la barre
             topBarActions = listOf {
                 IconButton(onClick = {

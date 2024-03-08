@@ -1,5 +1,6 @@
 package com.example.a24_03_toile.viewmodel
 
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -9,8 +10,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.a24_03_toile.model.PictureBean
 import com.example.a24_03_toile.model.WeatherAPI
 import com.example.a24_03_toile.model.pictureList
+import com.example.a24_03_toile.utils.LocationUtils
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 open class MainViewModel : ViewModel() {
@@ -19,21 +20,18 @@ open class MainViewModel : ViewModel() {
     val myList = mutableStateListOf<PictureBean>()
     var runInProgress by mutableStateOf(false)
     var errorMessage by mutableStateOf("")
-    var lastAction  = {  }
-
-    private var job = Job()
-
+    var lastAction = { }
 
     fun filterList() = myList.filter { it.title.contains(searchText) }
 
     //Dans le ViewModel
-    fun togglePictureAt(id : Int){
+    fun togglePictureAt(id: Int) {
         //Récupère la position de l'élément concerné
         val position = myList.indexOfFirst { it.id == id }
         // Copy créera une nouvelle référence, ce qui fera évoluer la liste et donc déclenchera la recomposition
         //myList[position] = myList[position].copy(favorite = !myList[position].favorite)
 
-        myList[position] =myList[position].let { it.copy(favorite = !it.favorite) }
+        myList[position] = myList[position].let { it.copy(favorite = !it.favorite) }
     }
 
 
@@ -50,9 +48,46 @@ open class MainViewModel : ViewModel() {
         }*/
     }
 
+    fun loadWeatherAround(context: Context) {
+        myList.clear()
+        errorMessage = ""
+        runInProgress = true
+
+        LocationUtils.getLastKnowLocationEconomyMode(context)
+            ?.addOnSuccessListener {
+                viewModelScope.launch(Dispatchers.Default) {
+                    try {
+                        WeatherAPI.loadWeatherAround(it.latitude, it.longitude).map {
+                            PictureBean(
+                                it.id,
+                                it.weather.getOrNull(0)?.icon ?: "",
+                                it.name,
+                                "Il fait ${it.main.temp}° à ${it.name} avec un vent de ${it.wind.speed}m/s"
+                            )
+                        }.let {
+                            if (it.isEmpty()) {
+                                throw Exception("Aucun élément")
+                            }
+                            myList.addAll(it)
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        errorMessage = "Erreur : ${e.message}"
+                    }
+
+                    runInProgress = false
+                }
+            }
+            ?.addOnFailureListener {
+                it.printStackTrace()
+                errorMessage = "Erreur : ${it.message}"
+                runInProgress = false
+            }
+    }
+
     open fun loadData(force: Boolean = false) {//Simulation de chargement de donnée
         if (force || myList.isEmpty()) {
-            lastAction = { loadData(force)}
+            lastAction = { loadData(force) }
             myList.clear()
             errorMessage = ""
             runInProgress = true
@@ -69,7 +104,7 @@ open class MainViewModel : ViewModel() {
                             "Il fait ${it.main.temp}° à ${it.name} avec un vent de ${it.wind.speed}m/s"
                         )
                     }.let {
-                        if(it.isEmpty()) {
+                        if (it.isEmpty()) {
                             throw Exception("Aucun élément")
                         }
                         myList.addAll(it)
